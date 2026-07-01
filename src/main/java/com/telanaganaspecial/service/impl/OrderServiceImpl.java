@@ -11,6 +11,7 @@ import com.telanaganaspecial.repository.UserRepository;
 import com.telanaganaspecial.service.EmailService;
 import com.telanaganaspecial.service.OrderService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
@@ -22,7 +23,9 @@ public class OrderServiceImpl implements OrderService {
     private final OrderRepository orderRepository;
     private final CartItemRepository cartItemRepository;
     private final UserRepository userRepository;
-    private final EmailService emailService;
+
+    @Autowired(required = false)
+    private  EmailService emailService;
 
     @Override
     @Transactional
