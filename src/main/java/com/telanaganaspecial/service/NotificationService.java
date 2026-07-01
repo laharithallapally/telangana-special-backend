@@ -76,8 +76,9 @@ public class NotificationService {
 
     public static String statusMessage(String name, String status) {
         return switch (status.toUpperCase()) {
-            case "PROCESSING" -> "👨‍🍳 Great news " + name + "! Your delicious order is being prepared with love!";
-            case "SHIPPED" -> "🚚 It's on the way, " + name + "! Your order is zooming towards you!";
+            case "CONFIRMED" -> "✅ Woohoo " + name + "! Your order is confirmed and heading to our kitchen!";
+            case "PREPARING" -> "👨‍🍳 Great news " + name + "! Your delicious order is being prepared with love!";
+            case "OUT_FOR_DELIVERY" -> "🚚 It's on the way, " + name + "! Your order is zooming towards you!";
             case "DELIVERED" -> "🎊 Enjoy your meal, " + name + "! Thanks for choosing Telangana Special!";
             case "CANCELLED" -> "😢 Oh no " + name + ", your order was cancelled. Reach out if you need help!";
             default -> "📦 Hey " + name + ", your order status was updated!";
