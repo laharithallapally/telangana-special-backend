@@ -9,6 +9,7 @@ import com.telanaganaspecial.repository.CartItemRepository;
 import com.telanaganaspecial.repository.OrderRepository;
 import com.telanaganaspecial.repository.UserRepository;
 import com.telanaganaspecial.service.EmailService;
+import com.telanaganaspecial.service.NotificationService;
 import com.telanaganaspecial.service.OrderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,9 +24,10 @@ public class OrderServiceImpl implements OrderService {
     private final OrderRepository orderRepository;
     private final CartItemRepository cartItemRepository;
     private final UserRepository userRepository;
+    private final NotificationService notificationService;
 
     @Autowired(required = false)
-    private  EmailService emailService;
+    private EmailService emailService;
 
     @Override
     @Transactional
@@ -63,7 +65,6 @@ public class OrderServiceImpl implements OrderService {
         cartItemRepository.deleteByUser(user);
 
         // Send order confirmation email
-        // Send order confirmation email
         if (emailService != null) {
             emailService.sendOrderConfirmationEmail(
                     user.getEmail(),
@@ -72,6 +73,18 @@ public class OrderServiceImpl implements OrderService {
                     total
             );
         }
+
+        // In-app notification to customer
+        notificationService.notifyUser(
+                user,
+                NotificationService.orderPlacedCustomerMessage(user.getName())
+        );
+
+        // In-app notification to all admins
+        notificationService.notifyAllAdmins(
+                NotificationService.orderPlacedAdminMessage(user.getName(), total)
+        );
+
         return mapToOrderResponse(order);
     }
 
@@ -104,7 +117,6 @@ public class OrderServiceImpl implements OrderService {
         orderRepository.save(order);
 
         // Send status update email
-        // Send status update email
         if (emailService != null) {
             emailService.sendOrderStatusEmail(
                     order.getUser().getEmail(),
@@ -113,6 +125,13 @@ public class OrderServiceImpl implements OrderService {
                     status
             );
         }
+
+        // In-app notification to customer
+        notificationService.notifyUser(
+                order.getUser(),
+                NotificationService.statusMessage(order.getUser().getName(), status)
+        );
+
         return mapToOrderResponse(order);
     }
 
