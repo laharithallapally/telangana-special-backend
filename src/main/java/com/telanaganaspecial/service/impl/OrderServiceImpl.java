@@ -8,6 +8,7 @@ import com.telanaganaspecial.exception.UserNotFoundException;
 import com.telanaganaspecial.repository.CartItemRepository;
 import com.telanaganaspecial.repository.OrderRepository;
 import com.telanaganaspecial.repository.UserRepository;
+import com.telanaganaspecial.service.EmailService;
 import com.telanaganaspecial.service.OrderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -21,6 +22,7 @@ public class OrderServiceImpl implements OrderService {
     private final OrderRepository orderRepository;
     private final CartItemRepository cartItemRepository;
     private final UserRepository userRepository;
+    private final EmailService emailService;
 
     @Override
     @Transactional
@@ -57,6 +59,14 @@ public class OrderServiceImpl implements OrderService {
         orderRepository.save(order);
         cartItemRepository.deleteByUser(user);
 
+        // Send order confirmation email
+        emailService.sendOrderConfirmationEmail(
+                user.getEmail(),
+                user.getName(),
+                order.getId(),
+                total
+        );
+
         return mapToOrderResponse(order);
     }
 
@@ -74,7 +84,6 @@ public class OrderServiceImpl implements OrderService {
         return null;
     }
 
-    // ✅ Fix — match your interface exactly
     public OrderResponseDto getOrderById(String email, Long orderId) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Order not found"));
@@ -85,8 +94,18 @@ public class OrderServiceImpl implements OrderService {
     public OrderResponseDto updateOrderStatus(Long orderId, String status) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Order not found"));
+
         order.setStatus(OrderStatus.valueOf(status.toUpperCase()));
         orderRepository.save(order);
+
+        // Send status update email
+        emailService.sendOrderStatusEmail(
+                order.getUser().getEmail(),
+                order.getUser().getName(),
+                orderId,
+                status
+        );
+
         return mapToOrderResponse(order);
     }
 
