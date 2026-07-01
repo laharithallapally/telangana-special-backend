@@ -63,13 +63,15 @@ public class OrderServiceImpl implements OrderService {
         cartItemRepository.deleteByUser(user);
 
         // Send order confirmation email
-        emailService.sendOrderConfirmationEmail(
-                user.getEmail(),
-                user.getName(),
-                order.getId(),
-                total
-        );
-
+        // Send order confirmation email
+        if (emailService != null) {
+            emailService.sendOrderConfirmationEmail(
+                    user.getEmail(),
+                    user.getName(),
+                    order.getId(),
+                    total
+            );
+        }
         return mapToOrderResponse(order);
     }
 
@@ -102,13 +104,15 @@ public class OrderServiceImpl implements OrderService {
         orderRepository.save(order);
 
         // Send status update email
-        emailService.sendOrderStatusEmail(
-                order.getUser().getEmail(),
-                order.getUser().getName(),
-                orderId,
-                status
-        );
-
+        // Send status update email
+        if (emailService != null) {
+            emailService.sendOrderStatusEmail(
+                    order.getUser().getEmail(),
+                    order.getUser().getName(),
+                    orderId,
+                    status
+            );
+        }
         return mapToOrderResponse(order);
     }
 
