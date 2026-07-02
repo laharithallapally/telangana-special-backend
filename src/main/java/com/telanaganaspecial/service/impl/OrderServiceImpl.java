@@ -8,11 +8,9 @@ import com.telanaganaspecial.exception.UserNotFoundException;
 import com.telanaganaspecial.repository.CartItemRepository;
 import com.telanaganaspecial.repository.OrderRepository;
 import com.telanaganaspecial.repository.UserRepository;
-import com.telanaganaspecial.service.EmailService;
 import com.telanaganaspecial.service.NotificationService;
 import com.telanaganaspecial.service.OrderService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
@@ -25,9 +23,6 @@ public class OrderServiceImpl implements OrderService {
     private final CartItemRepository cartItemRepository;
     private final UserRepository userRepository;
     private final NotificationService notificationService;
-
-    @Autowired(required = false)
-    private EmailService emailService;
 
     @Override
     @Transactional
@@ -64,15 +59,8 @@ public class OrderServiceImpl implements OrderService {
         orderRepository.save(order);
         cartItemRepository.deleteByUser(user);
 
-        // Send order confirmation email
-        if (emailService != null) {
-            emailService.sendOrderConfirmationEmail(
-                    user.getEmail(),
-                    user.getName(),
-                    order.getId(),
-                    total
-            );
-        }
+        // Order confirmation is now delivered as an in-app SMS-style pop-up
+        // (see NotificationService.orderPlacedCustomerMessage) instead of email.
 
         // In-app notification to customer
         notificationService.notifyUser(
@@ -116,15 +104,8 @@ public class OrderServiceImpl implements OrderService {
         order.setStatus(OrderStatus.valueOf(status.toUpperCase()));
         orderRepository.save(order);
 
-        // Send status update email
-        if (emailService != null) {
-            emailService.sendOrderStatusEmail(
-                    order.getUser().getEmail(),
-                    order.getUser().getName(),
-                    orderId,
-                    status
-            );
-        }
+        // Status update is now delivered as an in-app SMS-style pop-up
+        // (see NotificationService.statusMessage) instead of email.
 
         // In-app notification to customer
         notificationService.notifyUser(
