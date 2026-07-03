@@ -4,7 +4,9 @@ import com.telanaganaspecial.dto.CartItemResponseDto;
 import com.telanaganaspecial.dto.OrderResponseDto;
 import com.telanaganaspecial.dto.PlaceOrderRequestDto;
 import com.telanaganaspecial.entity.*;
+import com.telanaganaspecial.exception.AddressNotFoundException;
 import com.telanaganaspecial.exception.UserNotFoundException;
+import com.telanaganaspecial.repository.AddressRepository;
 import com.telanaganaspecial.repository.CartItemRepository;
 import com.telanaganaspecial.repository.OrderRepository;
 import com.telanaganaspecial.repository.UserRepository;
@@ -22,6 +24,7 @@ public class OrderServiceImpl implements OrderService {
     private final OrderRepository orderRepository;
     private final CartItemRepository cartItemRepository;
     private final UserRepository userRepository;
+    private final AddressRepository addressRepository;
     private final NotificationService notificationService;
 
     @Override
@@ -35,6 +38,8 @@ public class OrderServiceImpl implements OrderService {
             throw new RuntimeException("Cart is empty! Add items before placing order.");
         }
 
+        String resolvedAddress = resolveDeliveryAddress(user, dto);
+
         Double total = cartItems.stream()
                 .mapToDouble(item -> item.getProduct().getPrice() * item.getQuantity())
                 .sum();
@@ -42,7 +47,7 @@ public class OrderServiceImpl implements OrderService {
         Order order = Order.builder()
                 .user(user)
                 .totalAmount(total)
-                .deliveryAddress(dto.getDeliveryAddress())
+                .deliveryAddress(resolvedAddress)
                 .status(OrderStatus.PENDING)
                 .build();
 
@@ -141,6 +146,27 @@ public class OrderServiceImpl implements OrderService {
     private User getUser(String email) {
         return userRepository.findByEmail(email)
                 .orElseThrow(() -> new UserNotFoundException(email));
+    }
+
+    /**
+     * Resolves the delivery address to store on the order.
+     * Prefers a saved address (dto.addressId). Falls back to the free-text
+     * dto.deliveryAddress for backward compatibility with older frontend builds.
+     */
+    private String resolveDeliveryAddress(User user, PlaceOrderRequestDto dto) {
+        if (dto.getAddressId() != null) {
+            Address address = addressRepository.findByIdAndUserId(dto.getAddressId(), user.getId())
+                    .orElseThrow(() -> new AddressNotFoundException(dto.getAddressId()));
+
+            return address.getLabel() + " - " + address.getAddressLine() + ", "
+                    + address.getCity() + ", " + address.getState() + " - " + address.getPincode();
+        }
+
+        if (dto.getDeliveryAddress() != null && !dto.getDeliveryAddress().isBlank()) {
+            return dto.getDeliveryAddress();
+        }
+
+        throw new RuntimeException("Delivery address is required. Provide addressId or deliveryAddress.");
     }
 
     private OrderResponseDto mapToOrderResponse(Order order) {

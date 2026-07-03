@@ -101,8 +101,10 @@ public class SecurityConfig {
 
                         // Users
                         .requestMatchers("/api/users/**").authenticated()
+                                .requestMatchers("/api/addresses/**").authenticated()
 
-                        .anyRequest().authenticated()
+
+                                .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
