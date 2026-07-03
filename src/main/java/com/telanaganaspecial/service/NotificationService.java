@@ -7,9 +7,16 @@ import com.telanaganaspecial.repository.NotificationRepository;
 import com.telanaganaspecial.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 
+import com.google.firebase.messaging.FirebaseMessaging;
+import com.google.firebase.messaging.Message;
+
+import com.telanaganaspecial.repository.DeviceTokenRepository;
+import com.telanaganaspecial.entity.DeviceToken;
+import java.util.List;
+
 import org.springframework.stereotype.Service;
 
-import java.util.List;
+
 
 
 @Service
@@ -17,6 +24,7 @@ import java.util.List;
 public class NotificationService {
     private final NotificationRepository notificationRepository;
     private final UserRepository userRepository;
+    private final DeviceTokenRepository deviceTokenRepository;
 
     public void notifyUser(User user, String message) {
         Notification notification = Notification.builder()
@@ -74,6 +82,33 @@ public class NotificationService {
         return "💰 Cha-ching! " + name + " just placed a new order — ₹" + String.format("%.0f", amount) + "!";
     }
 
+    // NOTE: this method deliberately does NOT import com.google.firebase.messaging.Notification
+    // at the top of the file — it's fully-qualified inline below. Your own entity is also
+    // named "Notification" (see the import at the top of this file), and Java doesn't allow
+    // two imported classes to share the same simple name. Fully-qualifying the Firebase one
+    // here avoids that collision without renaming anything else in this file.
+    public void sendPush(Long userId, String title, String body) {
+        List<DeviceToken> tokens = deviceTokenRepository.findByUserId(userId);
+
+        for (DeviceToken deviceToken : tokens) {
+            Message message = Message.builder()
+                    .setToken(deviceToken.getFcmToken())
+                    .setNotification(
+                            com.google.firebase.messaging.Notification.builder()
+                                    .setTitle(title)
+                                    .setBody(body)
+                                    .build()
+                    )
+                    .build();
+
+            try {
+                FirebaseMessaging.getInstance().send(message);
+            } catch (Exception e) {
+                deviceTokenRepository.deleteByFcmToken(deviceToken.getFcmToken());
+            }
+        }
+    }
+
     public static String statusMessage(String name, String status) {
         return switch (status.toUpperCase()) {
             case "CONFIRMED" -> "✅ Woohoo " + name + "! Your order is confirmed and heading to our kitchen!";
@@ -85,4 +120,3 @@ public class NotificationService {
         };
     }
 }
-

@@ -68,6 +68,13 @@ public class OrderServiceImpl implements OrderService {
                 NotificationService.orderPlacedCustomerMessage(user.getName())
         );
 
+        // Real push notification to customer's device(s)
+        notificationService.sendPush(
+                user.getId(),
+                "Telangana Special",
+                NotificationService.orderPlacedCustomerMessage(user.getName())
+        );
+
         // In-app notification to all admins
         notificationService.notifyAllAdmins(
                 NotificationService.orderPlacedAdminMessage(user.getName(), total)
@@ -110,6 +117,13 @@ public class OrderServiceImpl implements OrderService {
         // In-app notification to customer
         notificationService.notifyUser(
                 order.getUser(),
+                NotificationService.statusMessage(order.getUser().getName(), status)
+        );
+
+        // Real push notification to customer's device(s)
+        notificationService.sendPush(
+                order.getUser().getId(),
+                "Telangana Special",
                 NotificationService.statusMessage(order.getUser().getName(), status)
         );
 
