@@ -18,7 +18,9 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/payment")
+/*
 @CrossOrigin(origins = "http://localhost:*")
+*/
 @Tag(name = "Payment API", description = "Razorpay payment endpoints")
 @SecurityRequirement(name = "bearerAuth")
 public class PaymentController {

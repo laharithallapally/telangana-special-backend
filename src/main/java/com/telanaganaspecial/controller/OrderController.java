@@ -18,7 +18,9 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/orders")
 @RequiredArgsConstructor
+/*
 @CrossOrigin(origins = "http://localhost:5173")
+*/
 @Tag(name = "Order API", description = "Order management endpoints")
 @SecurityRequirement(name = "bearerAuth")
 public class OrderController {
