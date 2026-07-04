@@ -16,10 +16,10 @@ import org.springframework.stereotype.Service;
 @Slf4j
 public class EmailService {
 
-    @Value("${SENDGRID_API_KEY}")
+    @Value("${SENDGRID_API_KEY:}")
     private String sendGridApiKey;
 
-    @Value("${SENDGRID_FROM_EMAIL}")
+    @Value("${SENDGRID_FROM_EMAIL:}")
     private String fromEmail;
 
     @Async
@@ -39,6 +39,11 @@ public class EmailService {
     }
 
     private void send(String toEmail, String subject, String body) {
+        if (sendGridApiKey == null || sendGridApiKey.isBlank()) {
+            log.warn("SENDGRID_API_KEY not configured — skipping email to {}", toEmail);
+            return;
+        }
+
         Email from = new Email(fromEmail);
         Email to = new Email(toEmail);
         Content content = new Content("text/plain", body);
