@@ -8,6 +8,8 @@ public interface UserService {
     AuthResponseDto login(@Valid LoginRequestDto dto);
     UserProfileDto getProfile(String email);
     UserProfileDto updateProfile(String email, UpdateProfileRequestDto dto);
+    void forgotPassword(ForgotPasswordRequestDto dto);
+    void resetPassword(ResetPasswordRequestDto dto);
 }
 
 

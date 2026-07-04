@@ -34,6 +34,11 @@ public class User {
     @Column(nullable = false)
     @Builder.Default
     private Role role = Role.USER;
+
+
+    private String resetToken;
+
+    private java.time.LocalDateTime resetTokenExpiry;
 }
 
 

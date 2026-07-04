@@ -3,15 +3,21 @@ package com.telanaganaspecial.service.impl;
 import com.telanaganaspecial.dto.*;
 import com.telanaganaspecial.entity.Role;
 import com.telanaganaspecial.entity.User;
+import com.telanaganaspecial.exception.InvalidResetTokenException;
 import com.telanaganaspecial.exception.UserAlreadyExistsException;
 import com.telanaganaspecial.exception.UserNotFoundException;
 import com.telanaganaspecial.repository.UserRepository;
 import com.telanaganaspecial.security.JwtUtil;
+import com.telanaganaspecial.service.EmailService;
 import com.telanaganaspecial.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -19,6 +25,10 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
+    private final EmailService emailService;
+
+    @Value("${app.frontend-url:http://localhost:5173}")
+    private String frontendUrl;
 
     @Override
     public AuthResponseDto register(RegisterRequestDto dto) {
@@ -84,6 +94,37 @@ public class UserServiceImpl implements UserService {
 
         return mapToProfileDto(user);
     }
+
+    @Override
+    public void forgotPassword(ForgotPasswordRequestDto dto) {
+        // Always behave the same way whether or not the email exists,
+        // so we don't leak which emails are registered.
+        userRepository.findByEmail(dto.getEmail()).ifPresent(user -> {
+            String token = UUID.randomUUID().toString();
+            user.setResetToken(token);
+            user.setResetTokenExpiry(LocalDateTime.now().plusMinutes(30));
+            userRepository.save(user);
+
+            String resetLink = frontendUrl + "/reset-password?token=" + token;
+            emailService.sendPasswordResetEmail(user.getEmail(), user.getName(), resetLink);
+        });
+    }
+
+    @Override
+    public void resetPassword(ResetPasswordRequestDto dto) {
+        User user = userRepository.findByResetToken(dto.getToken())
+                .orElseThrow(() -> new InvalidResetTokenException("Invalid or expired reset link"));
+
+        if (user.getResetTokenExpiry() == null || user.getResetTokenExpiry().isBefore(LocalDateTime.now())) {
+            throw new InvalidResetTokenException("Reset link has expired. Please request a new one.");
+        }
+
+        user.setPassword(passwordEncoder.encode(dto.getNewPassword()));
+        user.setResetToken(null);
+        user.setResetTokenExpiry(null);
+        userRepository.save(user);
+    }
+
 
     private UserProfileDto mapToProfileDto(User user) {
         return UserProfileDto.builder()

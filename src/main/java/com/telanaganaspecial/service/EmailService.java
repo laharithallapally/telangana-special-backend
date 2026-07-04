@@ -38,6 +38,13 @@ public class EmailService {
         send(toEmail, subject, body);
     }
 
+    @Async
+    public void sendPasswordResetEmail(String toEmail, String customerName, String resetLink) {
+        String subject = "Reset your password - Telangana Special";
+        String body = buildPasswordResetBody(customerName, resetLink);
+        send(toEmail, subject, body);
+    }
+
     private void send(String toEmail, String subject, String body) {
         if (sendGridApiKey == null || sendGridApiKey.isBlank()) {
             log.warn("SENDGRID_API_KEY not configured — skipping email to {}", toEmail);
@@ -107,5 +114,21 @@ public class EmailService {
                 Best regards,
                 Telangana Special Team
                 """.formatted(name, orderId, totalAmount);
+    }
+
+    private String buildPasswordResetBody(String name, String resetLink) {
+        return """
+                Hi %s,
+
+                We received a request to reset your password for Telangana Special.
+
+                Click the link below to set a new password. This link expires in 30 minutes:
+                %s
+
+                If you didn't request this, you can safely ignore this email.
+
+                Best regards,
+                Telangana Special Team
+                """.formatted(name, resetLink);
     }
 }
