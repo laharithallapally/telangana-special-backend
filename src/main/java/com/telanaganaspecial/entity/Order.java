@@ -39,5 +39,5 @@ public class Order {
 
     @Builder.Default
     private LocalDateTime createdAt = LocalDateTime.now();
-}
 
+}

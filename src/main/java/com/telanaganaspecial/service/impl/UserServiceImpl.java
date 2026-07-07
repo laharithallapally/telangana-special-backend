@@ -30,15 +30,22 @@ public class UserServiceImpl implements UserService {
     @Value("${app.frontend-url:http://localhost:5173}")
     private String frontendUrl;
 
+    /** Normalize emails consistently everywhere so case/whitespace never causes a mismatch. */
+    private String normalizeEmail(String email) {
+        return email == null ? null : email.trim().toLowerCase();
+    }
+
     @Override
     public AuthResponseDto register(RegisterRequestDto dto) {
-        if (userRepository.existsByEmail(dto.getEmail())) {
-            throw new UserAlreadyExistsException(dto.getEmail());
+        String email = normalizeEmail(dto.getEmail());
+
+        if (userRepository.existsByEmail(email)) {
+            throw new UserAlreadyExistsException(email);
         }
 
         User user = User.builder()
                 .name(dto.getName())
-                .email(dto.getEmail())
+                .email(email)
                 .password(passwordEncoder.encode(dto.getPassword()))
                 .phone(dto.getPhone())
                 .role(Role.USER)
@@ -58,7 +65,9 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public AuthResponseDto login(LoginRequestDto dto) {
-        User user = userRepository.findByEmail(dto.getEmail())
+        String email = normalizeEmail(dto.getEmail());
+
+        User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new BadCredentialsException("Invalid email or password"));
 
         if (!passwordEncoder.matches(dto.getPassword(), user.getPassword())) {
@@ -77,7 +86,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserProfileDto getProfile(String email) {
-        User user = userRepository.findByEmail(email)
+        User user = userRepository.findByEmail(normalizeEmail(email))
                 .orElseThrow(() -> new UserNotFoundException(email));
 
         return mapToProfileDto(user);
@@ -85,7 +94,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserProfileDto updateProfile(String email, UpdateProfileRequestDto dto) {
-        User user = userRepository.findByEmail(email)
+        User user = userRepository.findByEmail(normalizeEmail(email))
                 .orElseThrow(() -> new UserNotFoundException(email));
 
         user.setName(dto.getName());
@@ -99,7 +108,7 @@ public class UserServiceImpl implements UserService {
     public void forgotPassword(ForgotPasswordRequestDto dto) {
         // Always behave the same way whether or not the email exists,
         // so we don't leak which emails are registered.
-        userRepository.findByEmail(dto.getEmail()).ifPresent(user -> {
+        userRepository.findByEmail(normalizeEmail(dto.getEmail())).ifPresent(user -> {
             String token = UUID.randomUUID().toString();
             user.setResetToken(token);
             user.setResetTokenExpiry(LocalDateTime.now().plusMinutes(30));
