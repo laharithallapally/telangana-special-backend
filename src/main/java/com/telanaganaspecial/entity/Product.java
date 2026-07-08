@@ -35,5 +35,9 @@ import lombok.*;
         private String category;
         @Column(nullable = false)
         private Integer stock;
+
+        @Column(nullable = false)
+        private Boolean isVeg;
+
     }
 
