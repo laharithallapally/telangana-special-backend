@@ -20,7 +20,10 @@ public class DataSeeder implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
+        // Disabled — real data has been migrated from Railway to Aiven.
+        // Seeding logic kept below (commented out) in case it's needed again later.
 
+        /*
         // ── Seed Products ──
         if (productRepository.count() == 0) {
             productRepository.save(Product.builder()
@@ -93,5 +96,6 @@ public class DataSeeder implements CommandLineRunner {
             userRepository.save(admin);
             System.out.println("✅ Admin user created!");
         }
+        */
     }
 }
