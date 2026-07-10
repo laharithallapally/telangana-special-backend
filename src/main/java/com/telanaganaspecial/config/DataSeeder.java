@@ -31,6 +31,7 @@ public class DataSeeder implements CommandLineRunner {
                     .available(true)
                     .category("Snacks")
                     .stock(50)
+                    .isVeg(true)
                     .build());
 
             productRepository.save(Product.builder()
@@ -41,6 +42,7 @@ public class DataSeeder implements CommandLineRunner {
                     .available(true)
                     .category("Snacks")
                     .stock(50)
+                    .isVeg(true)
                     .build());
 
             productRepository.save(Product.builder()
@@ -51,6 +53,7 @@ public class DataSeeder implements CommandLineRunner {
                     .available(true)
                     .category("Sweets")
                     .stock(30)
+                    .isVeg(true)
                     .build());
 
             productRepository.save(Product.builder()
@@ -61,6 +64,7 @@ public class DataSeeder implements CommandLineRunner {
                     .available(true)
                     .category("Snacks")
                     .stock(40)
+                    .isVeg(true)
                     .build());
 
             productRepository.save(Product.builder()
@@ -71,6 +75,7 @@ public class DataSeeder implements CommandLineRunner {
                     .available(true)
                     .category("Sweets")
                     .stock(25)
+                    .isVeg(true)
                     .build());
 
             System.out.println("✅ Products seeded!");
