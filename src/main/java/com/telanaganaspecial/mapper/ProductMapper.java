@@ -18,10 +18,15 @@ public class ProductMapper {
                 .available(dto.getAvailable() == null ? true : dto.getAvailable())
                 .category(dto.getCategory())
                 .stock(dto.getStock())
+                .isVeg(dto.getIsVeg() == null ? true : dto.getIsVeg())
                 .build();
     }
 
     public static ProductResponseDto toDto(Product product) {
+        return toDto(product, null, 0L);
+    }
+
+    public static ProductResponseDto toDto(Product product, Double averageRating, Long reviewCount) {
         return ProductResponseDto.builder()
                 .id(product.getId())
                 .name(product.getName())
@@ -31,6 +36,9 @@ public class ProductMapper {
                 .available(product.getAvailable())
                 .category(product.getCategory())
                 .stock(product.getStock())
+                .isVeg(product.getIsVeg())
+                .averageRating(averageRating == null ? 0.0 : Math.round(averageRating * 10) / 10.0)
+                .reviewCount(reviewCount == null ? 0 : reviewCount.intValue())
                 .build();
     }
 }

@@ -8,6 +8,7 @@ import com.telanaganaspecial.mapper.ProductMapper;
 import com.telanaganaspecial.repository.CartItemRepository;
 import com.telanaganaspecial.repository.OrderItemRepository;
 import com.telanaganaspecial.repository.ProductRepository;
+import com.telanaganaspecial.repository.ReviewRepository;
 import com.telanaganaspecial.service.ProductService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -22,6 +23,7 @@ public class ProductServiceImpl implements ProductService {
     private final ProductRepository productRepository;
     private final CartItemRepository cartItemRepository;
     private final OrderItemRepository orderItemRepository;
+    private final ReviewRepository reviewRepository;
 
     @Override
     public ProductResponseDto addProduct(ProductRequestDto dto) {
@@ -34,7 +36,7 @@ public class ProductServiceImpl implements ProductService {
     public List<ProductResponseDto> getAllProducts() {
         return productRepository.findAll()
                 .stream()
-                .map(ProductMapper::toDto)
+                .map(this::toDtoWithRating)
                 .toList();
     }
 
@@ -42,15 +44,21 @@ public class ProductServiceImpl implements ProductService {
     public ProductResponseDto getProductById(Long id) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new ProductNotFoundException(id));
-        return ProductMapper.toDto(product);
+        return toDtoWithRating(product);
     }
 
     @Override
     public List<ProductResponseDto> getProductsByCategory(String category) {
         return productRepository.findByCategory(category)
                 .stream()
-                .map(ProductMapper::toDto)
+                .map(this::toDtoWithRating)
                 .toList();
+    }
+
+    private ProductResponseDto toDtoWithRating(Product product) {
+        Double avg = reviewRepository.findAverageRating(product.getId());
+        Long count = reviewRepository.countByProductId(product.getId());
+        return ProductMapper.toDto(product, avg, count);
     }
 
     @Override
@@ -65,9 +73,10 @@ public class ProductServiceImpl implements ProductService {
         existing.setAvailable(dto.getAvailable() == null ? existing.getAvailable() : dto.getAvailable());
         existing.setCategory(dto.getCategory());
         existing.setStock(dto.getStock());
+        existing.setIsVeg(dto.getIsVeg() == null ? existing.getIsVeg() : dto.getIsVeg());
 
         Product updated = productRepository.save(existing);
-        return ProductMapper.toDto(updated);
+        return ProductMapper.toDto(updated, reviewRepository.findAverageRating(updated.getId()), reviewRepository.countByProductId(updated.getId()));
     }
 
     @Override

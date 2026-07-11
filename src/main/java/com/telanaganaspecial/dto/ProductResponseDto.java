@@ -14,5 +14,7 @@ public class ProductResponseDto {
     private Boolean available;
     private String category;
     private Integer stock;
+    private Boolean isVeg;
+    private Double averageRating;
+    private Integer reviewCount;
 }
-

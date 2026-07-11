@@ -22,5 +22,6 @@ public class ProductRequestDto {
     @Min(value = 0,message = "stock cannot ge negative")
     private Integer stock;
 
-    }
+    private Boolean isVeg;
 
+}
