@@ -10,6 +10,7 @@ import com.telanaganaspecial.repository.ProductRepository;
 import com.telanaganaspecial.repository.UserRepository;
 import com.telanaganaspecial.repository.WishlistItemRepository;
 import com.telanaganaspecial.service.WishlistService;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -51,6 +52,7 @@ public class WishlistServiceImpl implements WishlistService {
         return mapToDto(item);
     }
 
+    @Transactional
     @Override
     public void removeFromWishlist(String email, Long productId) {
         User user = getUser(email);
