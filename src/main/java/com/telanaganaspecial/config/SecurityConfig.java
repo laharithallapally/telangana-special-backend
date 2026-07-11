@@ -83,7 +83,15 @@ public class SecurityConfig {
                                 "/v3/api-docs/**"
                         ).permitAll()
 
-                        // Products
+
+                                // Reviews (must come before the /api/products/** admin rules below,
+                                // since Spring Security uses the first matching rule)
+                                .requestMatchers(HttpMethod.GET, "/api/products/*/reviews").permitAll()
+                                .requestMatchers(HttpMethod.POST, "/api/products/*/reviews").authenticated()
+                                .requestMatchers(HttpMethod.DELETE, "/api/products/*/reviews").authenticated()
+
+
+                                // Products
                         .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/products/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/products/**").hasRole("ADMIN")
