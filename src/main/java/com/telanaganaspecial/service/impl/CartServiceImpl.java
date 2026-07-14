@@ -26,11 +26,9 @@ public class CartServiceImpl implements CartService {
     @Override
     public CartResponseDto getCart(String email) {
         User user = getUser(email);
-        List<CartItem> items = cartItemRepository.findByUser(user);
+        List<CartItem> items = cartItemRepository.findByUserWithProduct(user);
         return buildCartResponse(items);
     }
-
-
 
     @Override
     public CartResponseDto addToCart(String email, AddToCartRequestDto dto) {
@@ -50,7 +48,7 @@ public class CartServiceImpl implements CartService {
         cartItem.setQuantity(cartItem.getQuantity() + dto.getQuantity());
         cartItemRepository.save(cartItem);
 
-        return buildCartResponse(cartItemRepository.findByUser(user));
+        return buildCartResponse(cartItemRepository.findByUserWithProduct(user));
     }
 
     @Override
@@ -66,7 +64,7 @@ public class CartServiceImpl implements CartService {
             cartItemRepository.save(cartItem);
         }
 
-        return buildCartResponse(cartItemRepository.findByUser(user));
+        return buildCartResponse(cartItemRepository.findByUserWithProduct(user));
     }
 
     @Override
@@ -113,4 +111,3 @@ public class CartServiceImpl implements CartService {
                 .build();
     }
 }
-
