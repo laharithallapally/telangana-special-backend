@@ -23,4 +23,15 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
 
     @Query("SELECT COUNT(r) FROM Review r WHERE r.product.id = :productId")
     Long countByProductId(@Param("productId") Long productId);
+
+    /**
+     * Batched version - fetches average rating + review count for MANY products
+     * in a single query, instead of looping 2 queries per product.
+     * Each row: [0]=productId (Long), [1]=avgRating (Double), [2]=reviewCount (Long)
+     */
+    @Query("SELECT r.product.id, AVG(r.rating), COUNT(r) " +
+            "FROM Review r " +
+            "WHERE r.product.id IN :productIds " +
+            "GROUP BY r.product.id")
+    List<Object[]> findRatingStatsForProducts(@Param("productIds") List<Long> productIds);
 }
