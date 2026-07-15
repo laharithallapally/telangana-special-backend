@@ -12,8 +12,12 @@ import com.telanaganaspecial.repository.CartItemRepository;
 import com.telanaganaspecial.repository.ProductRepository;
 import com.telanaganaspecial.repository.UserRepository;
 import com.telanaganaspecial.service.CartService;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
+
 import java.util.List;
 
 @Service
@@ -82,7 +86,24 @@ public class CartServiceImpl implements CartService {
 
     // ---- helper methods ----
 
+    /**
+     * Resolves the current User without hitting the database whenever possible.
+     * The JWT filter already decoded userId from the token and stashed it on the
+     * request — if it's there, we use a zero-query Hibernate reference instead
+     * of running a fresh "SELECT * FROM users WHERE email = ?" every time.
+     * Falls back to the original email lookup if userId isn't available
+     * (e.g. an old token issued before this change, or no active web request).
+     */
     private User getUser(String email) {
+        try {
+            HttpServletRequest req = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
+            Long userId = (Long) req.getAttribute("userId");
+            if (userId != null) {
+                return userRepository.getReferenceById(userId);
+            }
+        } catch (IllegalStateException ignored) {
+            // no active request context (e.g. background job) — fall through to email lookup
+        }
         return userRepository.findByEmail(email)
                 .orElseThrow(() -> new UserNotFoundException(email));
     }

@@ -58,6 +58,13 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                         new WebAuthenticationDetailsSource().buildDetails(request)
                 );
                 SecurityContextHolder.getContext().setAuthentication(authToken);
+
+                // stash the userId (already decoded from the token, zero extra queries)
+                // so services can use it instead of re-looking-up the user by email
+                Long userId = jwtUtil.extractUserId(token);
+                if (userId != null) {
+                    request.setAttribute("userId", userId);
+                }
             }
 
         } catch (Exception e) {
