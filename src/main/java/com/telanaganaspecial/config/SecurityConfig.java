@@ -55,6 +55,12 @@ public class SecurityConfig {
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
 
+        // Tell the browser it can cache this preflight result for 1 hour,
+        // instead of re-checking CORS permissions before every single
+        // request. This removes one full network round-trip from most
+        // clicks (Add to Cart, etc.) after the very first one.
+        configuration.setMaxAge(3600L);
+
         UrlBasedCorsConfigurationSource source =
                 new UrlBasedCorsConfigurationSource();
 
@@ -73,15 +79,15 @@ public class SecurityConfig {
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        // Authentication
-                        .requestMatchers("/api/auth/**").permitAll()
+                                // Authentication
+                                .requestMatchers("/api/auth/**").permitAll()
 
-                        // Swagger
-                        .requestMatchers(
-                                "/swagger-ui/**",
-                                "/swagger-ui.html",
-                                "/v3/api-docs/**"
-                        ).permitAll()
+                                // Swagger
+                                .requestMatchers(
+                                        "/swagger-ui/**",
+                                        "/swagger-ui.html",
+                                        "/v3/api-docs/**"
+                                ).permitAll()
 
 
                                 // Reviews (must come before the /api/products/** admin rules below,
@@ -92,23 +98,23 @@ public class SecurityConfig {
 
 
                                 // Products
-                        .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/products/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/api/products/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/products/**").hasRole("ADMIN")
+                                .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
+                                .requestMatchers(HttpMethod.POST, "/api/products/**").hasRole("ADMIN")
+                                .requestMatchers(HttpMethod.PUT, "/api/products/**").hasRole("ADMIN")
+                                .requestMatchers(HttpMethod.DELETE, "/api/products/**").hasRole("ADMIN")
 // Notifications
                                 .requestMatchers("/api/notifications/**").authenticated()
-                        // Cart
-                        .requestMatchers("/api/cart/**").authenticated()
+                                // Cart
+                                .requestMatchers("/api/cart/**").authenticated()
 
-                        // Orders
-                        .requestMatchers("/api/orders/**").authenticated()
+                                // Orders
+                                .requestMatchers("/api/orders/**").authenticated()
 
-                        // Payments
-                        .requestMatchers("/api/payment/**").authenticated()
+                                // Payments
+                                .requestMatchers("/api/payment/**").authenticated()
 
-                        // Users
-                        .requestMatchers("/api/users/**").authenticated()
+                                // Users
+                                .requestMatchers("/api/users/**").authenticated()
                                 .requestMatchers("/api/addresses/**").authenticated()
 
 
