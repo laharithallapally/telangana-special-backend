@@ -21,10 +21,8 @@ public class User {
     @Column(nullable = false)
     private String name;
 
-
     @Column(name = "gender")
     private String gender;
-// + getter/setter, or nothing extra needed if you use Lombok @Data
 
     @Column(nullable = false, unique = true)
     private String email;
@@ -40,10 +38,7 @@ public class User {
     @Builder.Default
     private Role role = Role.USER;
 
-
     private String resetToken;
 
     private java.time.LocalDateTime resetTokenExpiry;
 }
-
-

@@ -11,7 +11,6 @@ import com.telanaganaspecial.security.JwtUtil;
 import com.telanaganaspecial.service.EmailService;
 import com.telanaganaspecial.service.UserService;
 import lombok.RequiredArgsConstructor;
-import org.bouncycastle.asn1.x509.sigi.PersonalData;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -30,7 +29,6 @@ public class UserServiceImpl implements UserService {
 
     @Value("${app.frontend-url:http://localhost:5173}")
     private String frontendUrl;
-    private PersonalData request;
 
     /** Normalize emails consistently everywhere so case/whitespace never causes a mismatch. */
     private String normalizeEmail(String email) {
@@ -50,6 +48,7 @@ public class UserServiceImpl implements UserService {
                 .email(email)
                 .password(passwordEncoder.encode(dto.getPassword()))
                 .phone(dto.getPhone())
+                .gender(dto.getGender())
                 .role(Role.USER)
                 .build();
 
@@ -62,6 +61,7 @@ public class UserServiceImpl implements UserService {
                 .name(user.getName())
                 .email(user.getEmail())
                 .role(user.getRole().name())
+                .gender(user.getGender())
                 .build();
     }
 
@@ -83,6 +83,7 @@ public class UserServiceImpl implements UserService {
                 .name(user.getName())
                 .email(user.getEmail())
                 .role(user.getRole().name())
+                .gender(user.getGender())
                 .build();
     }
 
@@ -101,6 +102,9 @@ public class UserServiceImpl implements UserService {
 
         user.setName(dto.getName());
         user.setPhone(dto.getPhone());
+        if (dto.getGender() != null) {
+            user.setGender(dto.getGender());
+        }
         userRepository.save(user);
 
         return mapToProfileDto(user);
@@ -108,8 +112,6 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void forgotPassword(ForgotPasswordRequestDto dto) {
-        // Always behave the same way whether or not the email exists,
-        // so we don't leak which emails are registered.
         userRepository.findByEmail(normalizeEmail(dto.getEmail())).ifPresent(user -> {
             String token = UUID.randomUUID().toString();
             user.setResetToken(token);
@@ -134,9 +136,7 @@ public class UserServiceImpl implements UserService {
         user.setResetToken(null);
         user.setResetTokenExpiry(null);
         userRepository.save(user);
-        user.setGender(request.getGender());
     }
-
 
     private UserProfileDto mapToProfileDto(User user) {
         return UserProfileDto.builder()
@@ -145,7 +145,7 @@ public class UserServiceImpl implements UserService {
                 .email(user.getEmail())
                 .phone(user.getPhone())
                 .role(user.getRole().name())
+                .gender(user.getGender())
                 .build();
     }
-
 }

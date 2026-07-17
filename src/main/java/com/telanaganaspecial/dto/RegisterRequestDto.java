@@ -25,6 +25,6 @@ public class RegisterRequestDto {
 
     @NotBlank(message = "Phone is required")
     private String phone;
+
+    private String gender;
 }
-
-
