@@ -11,6 +11,7 @@ import com.telanaganaspecial.security.JwtUtil;
 import com.telanaganaspecial.service.EmailService;
 import com.telanaganaspecial.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.bouncycastle.asn1.x509.sigi.PersonalData;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -29,6 +30,7 @@ public class UserServiceImpl implements UserService {
 
     @Value("${app.frontend-url:http://localhost:5173}")
     private String frontendUrl;
+    private PersonalData request;
 
     /** Normalize emails consistently everywhere so case/whitespace never causes a mismatch. */
     private String normalizeEmail(String email) {
@@ -132,6 +134,7 @@ public class UserServiceImpl implements UserService {
         user.setResetToken(null);
         user.setResetTokenExpiry(null);
         userRepository.save(user);
+        user.setGender(request.getGender());
     }
 
 
