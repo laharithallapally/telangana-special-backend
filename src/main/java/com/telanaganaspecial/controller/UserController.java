@@ -14,10 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/users")
@@ -47,8 +44,17 @@ public class UserController {
     public ResponseEntity<UserProfileDto> updateProfile(
             @AuthenticationPrincipal String email,
             @Valid @RequestBody UpdateProfileRequestDto dto) {
+        System.out.println("=== UPDATE PROFILE HIT ===");
+        System.out.println("email=[" + email + "]");
+        System.out.println("dto.name=[" + dto.getName() + "]");
+        System.out.println("dto.phone=[" + dto.getPhone() + "]");
+        System.out.println("dto.gender=[" + dto.getGender() + "]");
         return ResponseEntity.ok(userService.updateProfile(email, dto));
     }
+
+    @PostMapping("/debug-echo")
+    public ResponseEntity<UpdateProfileRequestDto> debugEcho(@RequestBody UpdateProfileRequestDto dto) {
+        System.out.println("DEBUG name=[" + dto.getName() + "] phone=[" + dto.getPhone() + "] gender=[" + dto.getGender() + "]");
+        return ResponseEntity.ok(dto);
+    }
 }
-
-
