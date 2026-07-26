@@ -2,6 +2,7 @@ package com.telanaganaspecial.dto;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -24,6 +25,7 @@ public class RegisterRequestDto {
     private String password;
 
     @NotBlank(message = "Phone is required")
+    @Pattern(regexp = "^[6-9]\\d{9}$", message = "Enter a valid 10-digit Indian mobile number")
     private String phone;
 
     private String gender;
