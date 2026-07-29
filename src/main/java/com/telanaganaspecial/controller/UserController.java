@@ -6,12 +6,10 @@ import com.telanaganaspecial.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -44,28 +42,6 @@ public class UserController {
     public ResponseEntity<UserProfileDto> updateProfile(
             @AuthenticationPrincipal String email,
             @Valid @RequestBody UpdateProfileRequestDto dto) {
-        System.out.println("=== UPDATE PROFILE HIT ===");
-        System.out.println("email=[" + email + "]");
-        System.out.println("dto.name=[" + dto.getName() + "]");
-        System.out.println("dto.phone=[" + dto.getPhone() + "]");
-        System.out.println("dto.gender=[" + dto.getGender() + "]");
         return ResponseEntity.ok(userService.updateProfile(email, dto));
-    }
-
-    @PostMapping("/debug-echo")
-    public ResponseEntity<UpdateProfileRequestDto> debugEcho(@RequestBody UpdateProfileRequestDto dto) {
-        System.out.println("DEBUG name=[" + dto.getName() + "] phone=[" + dto.getPhone() + "] gender=[" + dto.getGender() + "]");
-        return ResponseEntity.ok(dto);
-    }
-
-    // --- TEMPORARY DIAGNOSTIC ENDPOINT ---
-    // Reads the request body as a raw String, bypassing Jackson/DTO binding entirely.
-    // Used to confirm whether the raw HTTP body is arriving intact.
-    // Remove this once the /me deserialization issue is resolved.
-    @PutMapping("/me-raw")
-    public ResponseEntity<String> updateProfileRaw(@RequestBody String rawBody) {
-        System.out.println("=== RAW BODY RECEIVED ===");
-        System.out.println(rawBody);
-        return ResponseEntity.ok(rawBody);
     }
 }
