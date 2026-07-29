@@ -57,4 +57,15 @@ public class UserController {
         System.out.println("DEBUG name=[" + dto.getName() + "] phone=[" + dto.getPhone() + "] gender=[" + dto.getGender() + "]");
         return ResponseEntity.ok(dto);
     }
+
+    // --- TEMPORARY DIAGNOSTIC ENDPOINT ---
+    // Reads the request body as a raw String, bypassing Jackson/DTO binding entirely.
+    // Used to confirm whether the raw HTTP body is arriving intact.
+    // Remove this once the /me deserialization issue is resolved.
+    @PutMapping("/me-raw")
+    public ResponseEntity<String> updateProfileRaw(@RequestBody String rawBody) {
+        System.out.println("=== RAW BODY RECEIVED ===");
+        System.out.println(rawBody);
+        return ResponseEntity.ok(rawBody);
+    }
 }
