@@ -25,7 +25,6 @@ public class Order {
     @JoinColumn(name = "user_id")
     private User user;
 
-    // list of items in this order
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
     private List<OrderItem> items;
 
@@ -40,4 +39,10 @@ public class Order {
     @Builder.Default
     private LocalDateTime createdAt = LocalDateTime.now();
 
+    // --- Payment tracking ---
+    private String razorpayOrderId;
+    private String razorpayPaymentId;
+
+    @Builder.Default
+    private String paymentStatus = "PENDING"; // PENDING | PAID
 }

@@ -68,7 +68,6 @@ public class SecurityConfig {
 
         return source;
     }
-
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
@@ -78,50 +77,52 @@ public class SecurityConfig {
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                                // Authentication
-                                .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        // Authentication
+                        .requestMatchers("/api/auth/**").permitAll()
 
-                                // Swagger
-                                .requestMatchers(
-                                        "/swagger-ui/**",
-                                        "/swagger-ui.html",
-                                        "/v3/api-docs/**"
-                                ).permitAll()
+                        // Swagger
+                        .requestMatchers(
+                                "/swagger-ui/**",
+                                "/swagger-ui.html",
+                                "/v3/api-docs/**"
+                        ).permitAll()
 
+                        // Reviews (must come before the /api/products/** admin rules below,
+                        // since Spring Security uses the first matching rule)
+                        .requestMatchers(HttpMethod.GET, "/api/products/*/reviews").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/products/*/reviews").authenticated()
+                        .requestMatchers(HttpMethod.DELETE, "/api/products/*/reviews").authenticated()
 
-                                // Reviews (must come before the /api/products/** admin rules below,
-                                // since Spring Security uses the first matching rule)
-                                .requestMatchers(HttpMethod.GET, "/api/products/*/reviews").permitAll()
-                                .requestMatchers(HttpMethod.POST, "/api/products/*/reviews").authenticated()
-                                .requestMatchers(HttpMethod.DELETE, "/api/products/*/reviews").authenticated()
+                        // Products
+                        .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/products/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/products/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/products/**").hasRole("ADMIN")
 
+                        // AI Chat Assistant — public, no login required
+                        .requestMatchers("/api/chat/**").permitAll()
 
-                                // Products
-                                .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
-                                .requestMatchers(HttpMethod.POST, "/api/products/**").hasRole("ADMIN")
-                                .requestMatchers(HttpMethod.PUT, "/api/products/**").hasRole("ADMIN")
-                                .requestMatchers(HttpMethod.DELETE, "/api/products/**").hasRole("ADMIN")
-// Notifications
-                                .requestMatchers("/api/notifications/**").authenticated()
-                                // Cart
-                                .requestMatchers("/api/cart/**").authenticated()
+                        // Notifications
+                        .requestMatchers("/api/notifications/**").authenticated()
+                        // Cart
+                        .requestMatchers("/api/cart/**").authenticated()
 
-                                // Orders
-                                .requestMatchers("/api/orders/**").authenticated()
+                        // Orders
+                        .requestMatchers("/api/orders/**").authenticated()
 
-                                // Payments
-                                .requestMatchers("/api/payment/**").authenticated()
+                        // Payments
+                        .requestMatchers("/api/payment/**").authenticated()
 
-                                // Users
-                                .requestMatchers("/api/users/**").authenticated()
-                                .requestMatchers("/api/addresses/**").authenticated()
+                        // Users
+                        .requestMatchers("/api/users/**").authenticated()
+                        .requestMatchers("/api/addresses/**").authenticated()
 
-
-                                .anyRequest().authenticated()
+                        .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
-}
+
+   }

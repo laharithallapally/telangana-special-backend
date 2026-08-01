@@ -15,6 +15,7 @@ import com.telanaganaspecial.service.OrderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 import java.util.List;
 
 @Service
@@ -64,23 +65,76 @@ public class OrderServiceImpl implements OrderService {
         orderRepository.save(order);
         cartItemRepository.deleteByUser(user);
 
-        // Order confirmation is now delivered as an in-app SMS-style pop-up
-        // (see NotificationService.orderPlacedCustomerMessage) instead of email.
-
-        // In-app notification to customer
         notificationService.notifyUser(
                 user,
                 NotificationService.orderPlacedCustomerMessage(user.getName())
         );
 
-        // Real push notification to customer's device(s)
         notificationService.sendPush(
                 user.getId(),
                 "Telangana Special",
                 NotificationService.orderPlacedCustomerMessage(user.getName())
         );
 
-        // In-app notification to all admins
+        notificationService.notifyAllAdmins(
+                NotificationService.orderPlacedAdminMessage(user.getName(), total)
+        );
+
+        return mapToOrderResponse(order);
+    }
+
+    @Override
+    @Transactional
+    public OrderResponseDto placeOrderWithPayment(String email, PlaceOrderRequestDto dto,
+                                                  String razorpayOrderId, String razorpayPaymentId) {
+        User user = getUser(email);
+
+        List<CartItem> cartItems = cartItemRepository.findByUser(user);
+
+        if (cartItems.isEmpty()) {
+            throw new RuntimeException("Cart is empty! Add items before placing order.");
+        }
+
+        String resolvedAddress = resolveDeliveryAddress(user, dto);
+
+        Double total = cartItems.stream()
+                .mapToDouble(item -> item.getProduct().getPrice() * item.getQuantity())
+                .sum();
+
+        Order order = Order.builder()
+                .user(user)
+                .totalAmount(total)
+                .deliveryAddress(resolvedAddress)
+                .status(OrderStatus.PENDING)
+                .razorpayOrderId(razorpayOrderId)
+                .razorpayPaymentId(razorpayPaymentId)
+                .paymentStatus("PAID")
+                .build();
+
+        List<OrderItem> orderItems = cartItems.stream()
+                .map(cartItem -> OrderItem.builder()
+                        .order(order)
+                        .product(cartItem.getProduct())
+                        .quantity(cartItem.getQuantity())
+                        .price(cartItem.getProduct().getPrice())
+                        .build())
+                .toList();
+
+        order.setItems(orderItems);
+        orderRepository.save(order);
+        cartItemRepository.deleteByUser(user);
+
+        notificationService.notifyUser(
+                user,
+                NotificationService.orderPlacedCustomerMessage(user.getName())
+        );
+
+        notificationService.sendPush(
+                user.getId(),
+                "Telangana Special",
+                NotificationService.orderPlacedCustomerMessage(user.getName())
+        );
+
         notificationService.notifyAllAdmins(
                 NotificationService.orderPlacedAdminMessage(user.getName(), total)
         );
@@ -99,10 +153,6 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public OrderResponseDto getOrderById(Long orderId, String email) {
-        return null;
-    }
-
-    public OrderResponseDto getOrderById(String email, Long orderId) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Order not found"));
         return mapToOrderResponse(order);
@@ -116,16 +166,11 @@ public class OrderServiceImpl implements OrderService {
         order.setStatus(OrderStatus.valueOf(status.toUpperCase()));
         orderRepository.save(order);
 
-        // Status update is now delivered as an in-app SMS-style pop-up
-        // (see NotificationService.statusMessage) instead of email.
-
-        // In-app notification to customer
         notificationService.notifyUser(
                 order.getUser(),
                 NotificationService.statusMessage(order.getUser().getName(), status)
         );
 
-        // Real push notification to customer's device(s)
         notificationService.sendPush(
                 order.getUser().getId(),
                 "Telangana Special",
@@ -148,11 +193,6 @@ public class OrderServiceImpl implements OrderService {
                 .orElseThrow(() -> new UserNotFoundException(email));
     }
 
-    /**
-     * Resolves the delivery address to store on the order.
-     * Prefers a saved address (dto.addressId). Falls back to the free-text
-     * dto.deliveryAddress for backward compatibility with older frontend builds.
-     */
     private String resolveDeliveryAddress(User user, PlaceOrderRequestDto dto) {
         if (dto.getAddressId() != null) {
             Address address = addressRepository.findByIdAndUserId(dto.getAddressId(), user.getId())
